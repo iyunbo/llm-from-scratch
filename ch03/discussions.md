@@ -78,3 +78,30 @@ Key details:
 `y = xW + b` — bias adds a translation (shift), giving the model more freedom than `y = xW` (which is locked to pass through origin).
 
 **In attention:** GPT-2 uses `bias=False` for Q, K, V projections because softmax normalization largely cancels the shift effect. Rule of thumb: if a normalization layer (softmax, layernorm) follows immediately, bias can be dropped to save parameters.
+
+---
+
+## What does softmax do and how to understand its mechanism?
+
+**Turns any set of numbers into a probability distribution (all positive, sum to 1).**
+
+Formula: `softmax(xᵢ) = e^xᵢ / Σ(e^xⱼ)`
+
+Two steps: ① exponentiate (guarantee positive) ② normalize (guarantee sum=1).
+
+**Why e^x?** It preserves ranking, makes negatives near-zero, and amplifies differences — exactly what attention needs.
+
+**Amplification effect:**
+- Small gaps in input → near-uniform distribution
+- Large gaps → winner-takes-all
+
+```
+[1.0, 1.1, 0.9] → softmax → [0.33, 0.36, 0.31]  (nearly uniform)
+[1.0, 5.0, 0.5] → softmax → [0.02, 0.95, 0.01]  (winner takes all)
+```
+
+**In attention:** softmax converts raw Q·K match scores into "how much information to borrow from each token."
+
+**Temperature:** `softmax(x/T)` — T<1 sharpens (more confident), T>1 flattens (more random), T→0 becomes argmax, T→∞ becomes uniform. This is how LLM generation controls "creativity."
+
+**√d_k scaling:** `softmax(Q·K^T / √d_k)` — acts as a fixed temperature. Without it, dot products grow with dimension size, pushing softmax into saturation (near one-hot), killing gradients. Scaling keeps inputs in a healthy range.
