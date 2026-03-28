@@ -11,7 +11,7 @@ Understanding LLMs by building one — no shortcuts, no frameworks, just raw PyT
 | Chapter | Topic | Status |
 |---------|-------|--------|
 | 1 | Understanding Large Language Models | ✅ |
-| 2 | Working with Text Data | ⬜ |
+| 2 | Working with Text Data | ✅ |
 | 3 | Coding Attention Mechanisms | ⬜ |
 | 4 | Implementing a GPT Model from Scratch | ⬜ |
 | 5 | Pretraining on Unlabeled Data | ⬜ |
