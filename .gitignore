@@ -6,3 +6,5 @@ __pycache__/
 .DS_Store
 .env
 data/
+ch05/checkpoints/
+__pycache__/
