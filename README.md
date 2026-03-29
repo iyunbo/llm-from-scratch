@@ -15,7 +15,7 @@ Understanding LLMs by building one — no shortcuts, no frameworks, just raw PyT
 | 3 | Coding Attention Mechanisms | ✅ |
 | 4 | Implementing a GPT Model from Scratch | ✅ |
 | 5 | Pretraining on Unlabeled Data | ✅ |
-| 6 | Fine-Tuning for Classification | ⬜ |
+| 6 | Fine-Tuning for Classification | ✅ |
 | 7 | Fine-Tuning to Follow Instructions | ⬜ |
 
 ## Structure
