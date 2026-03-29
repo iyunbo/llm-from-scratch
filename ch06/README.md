@@ -75,7 +75,9 @@ The pretrained head maps `d_model → vocab_size` (50,257 outputs for next-token
 | **Objective** | Next-token prediction | Classification |
 | **Loss** | Cross-entropy on vocab | Cross-entropy on classes |
 | **Metric** | Perplexity | Accuracy |
-| **Learning rate** | 5e-4 (higher) | 5e-5 (10× lower) |
+| **Learning rate** | 5e-4 (higher) | 5e-5 (10× lower) with pretrained backbone; 5e-4 without |
+
+> **Note:** The 5e-5 lr assumes pretrained weights are loaded. When fine-tuning from random initialization (no pretrained backbone), use 5e-4 — otherwise the model won't learn.
 | **Epochs** | 30+ | 10-20 |
 | **Trainable params** | All | Head + last few layers |
 
