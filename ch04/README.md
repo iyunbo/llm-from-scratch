@@ -70,7 +70,10 @@ Input x ──────────────────┐
 - **Identity mapping**: If a layer learns nothing useful, it can default to identity (output ≈ 0) and just pass the input through.
 - **Incremental learning**: Each layer only needs to learn the *residual* (the difference from the input), which is typically a smaller signal.
 
-### GELU vs ReLU
+### GELU
+
+![GELU vs ReLU](gelu_vs_relu.png)
+ vs ReLU
 
 ```
 ReLU(x):                    GELU(x):
