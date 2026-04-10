@@ -35,6 +35,10 @@ Each chapter contains:
 - Notes and key takeaways
 - Exercises
 
+## Documentation
+
+📄 **[Browse the documentation site](https://iyunbo.github.io/llm-from-scratch/)** — interactive architecture diagrams, component deep-dives, and code walkthroughs.
+
 ## Reference
 
 - 📖 [Build a Large Language Model (From Scratch)](https://www.manning.com/books/build-a-large-language-model-from-scratch) by Sebastian Raschka

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attention &ndash; LLM From Scratch</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <span class="brand">LLM From Scratch</span>
+  <a href="index.html">Overview</a>
+  <a href="architecture.html">Architecture</a>
+  <a href="tokenization.html">Tokenization</a>
+  <a href="attention.html" class="active">Attention</a>
+  <a href="model.html">Model</a>
+  <a href="training.html">Training</a>
+  <a href="finetuning.html">Fine-tuning</a>
+  <span class="spacer"></span>
+  <a href="https://github.com/iyunbo/llm-from-scratch">GitHub</a>
+</nav>
+
+<div class="container">
+  <h1>Attention Mechanisms</h1>
+  <p class="subtitle">Chapter 3 &mdash; Three implementations of attention, built incrementally from raw matrix operations to the full multi-head version used in GPT.</p>
+
+  <h2>The Core Formula</h2>
+  <div class="formula">Attention(Q, K, V) = softmax(QK<sup>T</sup> / &radic;d<sub>k</sub>) &middot; V</div>
+  <p>Each token produces a Query (what am I looking for?), Key (what do I contain?), and Value (what do I transmit?). The dot product of Q and K measures relevance; softmax normalizes it into weights; the weighted sum of V produces the output.</p>
+
+  <h2>Three Progressive Implementations</h2>
+
+  <h3>1. SimpleAttention</h3>
+  <p>No learnable parameters. Manually computes Q, K, V projections using raw matrix multiplication to demonstrate the core attention math.</p>
+
+  <h3>2. CausalAttention</h3>
+  <p>Adds <code>nn.Linear</code> projections and a <strong>causal mask</strong> &mdash; an upper-triangular matrix that prevents each token from attending to future positions. This is what makes autoregressive generation possible.</p>
+
+  <pre><code># Causal mask: upper triangle filled with -inf
+mask = torch.triu(torch.ones(seq_len, seq_len), diagonal=1)
+scores = scores.masked_fill(mask.bool(), float('-inf'))</code></pre>
+
+  <h3>3. MultiHeadAttention</h3>
+  <p>Runs multiple attention heads in parallel. Each head operates on a slice of the embedding dimension, learning different attention patterns. Outputs are concatenated and projected back.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, sans-serif">
+      <defs>
+        <marker id="arr2" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+        </marker>
+      </defs>
+
+      <!-- Input -->
+      <rect x="10" y="65" width="80" height="50" rx="6" fill="#f0f0f5" stroke="#888" stroke-width="1.5"/>
+      <text x="50" y="94" text-anchor="middle" font-size="10" font-weight="600">Input x</text>
+
+      <line x1="90" y1="90" x2="140" y2="40" stroke="#888" stroke-width="1" marker-end="url(#arr2)"/>
+      <line x1="90" y1="90" x2="140" y2="90" stroke="#888" stroke-width="1" marker-end="url(#arr2)"/>
+      <line x1="90" y1="90" x2="140" y2="140" stroke="#888" stroke-width="1" marker-end="url(#arr2)"/>
+
+      <!-- Heads -->
+      <rect x="150" y="15" width="120" height="50" rx="6" fill="#fff0e6" stroke="#e07a5f" stroke-width="1.5"/>
+      <text x="210" y="44" text-anchor="middle" font-size="10" font-weight="600">Head 1</text>
+
+      <rect x="150" y="75" width="120" height="50" rx="6" fill="#fff0e6" stroke="#e07a5f" stroke-width="1.5"/>
+      <text x="210" y="104" text-anchor="middle" font-size="10" font-weight="600">Head 2</text>
+
+      <rect x="150" y="125" width="120" height="50" rx="6" fill="#fff0e6" stroke="#e07a5f" stroke-width="1.5"/>
+      <text x="210" y="147" text-anchor="middle" font-size="9" fill="#555">d_k = d_model / n_heads</text>
+      <text x="210" y="161" text-anchor="middle" font-size="10" font-weight="600">Head N</text>
+
+      <!-- Concat -->
+      <line x1="270" y1="40" x2="340" y2="90" stroke="#888" stroke-width="1" marker-end="url(#arr2)"/>
+      <line x1="270" y1="100" x2="340" y2="90" stroke="#888" stroke-width="1" marker-end="url(#arr2)"/>
+      <line x1="270" y1="150" x2="340" y2="90" stroke="#888" stroke-width="1" marker-end="url(#arr2)"/>
+
+      <rect x="350" y="65" width="100" height="50" rx="6" fill="#ede9fe" stroke="#7b68ee" stroke-width="1.5"/>
+      <text x="400" y="94" text-anchor="middle" font-size="10" font-weight="600">Concat</text>
+
+      <line x1="450" y1="90" x2="490" y2="90" stroke="#888" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+      <!-- Output projection -->
+      <rect x="500" y="65" width="120" height="50" rx="6" fill="#e8f4f8" stroke="#457b9d" stroke-width="1.5"/>
+      <text x="560" y="88" text-anchor="middle" font-size="10" font-weight="600">Output</text>
+      <text x="560" y="102" text-anchor="middle" font-size="9" fill="#555">Projection</text>
+    </svg>
+  </div>
+
+  <h2>Why Separate Q, K, V?</h2>
+  <p>Decoupling the three projections lets the model learn <em>what to match on</em> (Q, K) independently from <em>what information to transmit</em> (V). A token might match on syntactic role but transmit semantic content.</p>
+
+  <h2>Why Scale by &radic;d<sub>k</sub>?</h2>
+  <p>Without scaling, large dot products push softmax into saturation (near-zero gradients). Dividing by &radic;d<sub>k</sub> keeps the variance of scores roughly constant regardless of dimension.</p>
+
+  <h2>Key Design Choices</h2>
+  <div class="concepts">
+    <div class="concept">
+      <strong>Causal Mask</strong>
+      <span>Prevents attending to future tokens &mdash; essential for autoregressive generation</span>
+    </div>
+    <div class="concept">
+      <strong>Attention Dropout</strong>
+      <span>Prevents over-reliance on fixed positions; improves generalization</span>
+    </div>
+    <div class="concept">
+      <strong>Head Specialization</strong>
+      <span>Different heads learn different patterns: syntax, semantics, position</span>
+    </div>
+    <div class="concept">
+      <strong>Same Parameter Count</strong>
+      <span>Multi-head uses the same total parameters as single-head but is more expressive</span>
+    </div>
+  </div>
+
+  <h2>Key File</h2>
+  <table>
+    <tr><th>File</th><th>Lines</th><th>Description</th></tr>
+    <tr><td><code>ch03/attention.py</code></td><td>612</td><td>All three attention implementations with detailed comments</td></tr>
+  </table>
+
+  <footer>
+    <a href="tokenization.html">&larr; Tokenization</a>
+    <a href="model.html">Model &rarr;</a>
+  </footer>
+</div>
+</body>
+</html>

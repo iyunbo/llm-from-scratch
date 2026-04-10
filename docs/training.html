@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training &ndash; LLM From Scratch</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <span class="brand">LLM From Scratch</span>
+  <a href="index.html">Overview</a>
+  <a href="architecture.html">Architecture</a>
+  <a href="tokenization.html">Tokenization</a>
+  <a href="attention.html">Attention</a>
+  <a href="model.html">Model</a>
+  <a href="training.html" class="active">Training</a>
+  <a href="finetuning.html">Fine-tuning</a>
+  <span class="spacer"></span>
+  <a href="https://github.com/iyunbo/llm-from-scratch">GitHub</a>
+</nav>
+
+<div class="container">
+  <h1>Pretraining</h1>
+  <p class="subtitle">Chapter 5 &mdash; Training the GPT model from scratch with next-token prediction, learning rate scheduling, and checkpointing.</p>
+
+  <h2>Training Pipeline</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 700 100" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, sans-serif">
+      <defs>
+        <marker id="arr3" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+        </marker>
+      </defs>
+      <rect x="10" y="25" width="100" height="50" rx="6" fill="#fef3e2" stroke="#f4a261" stroke-width="1.5"/>
+      <text x="60" y="54" text-anchor="middle" font-size="10" font-weight="600">Load Data</text>
+      <line x1="110" y1="50" x2="140" y2="50" stroke="#888" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+      <rect x="150" y="25" width="100" height="50" rx="6" fill="#fef3e2" stroke="#f4a261" stroke-width="1.5"/>
+      <text x="200" y="54" text-anchor="middle" font-size="10" font-weight="600">Forward</text>
+      <line x1="250" y1="50" x2="280" y2="50" stroke="#888" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+      <rect x="290" y="25" width="100" height="50" rx="6" fill="#fef3e2" stroke="#f4a261" stroke-width="1.5"/>
+      <text x="340" y="48" text-anchor="middle" font-size="10" font-weight="600">Cross-Entropy</text>
+      <text x="340" y="62" text-anchor="middle" font-size="9" fill="#555">Loss</text>
+      <line x1="390" y1="50" x2="420" y2="50" stroke="#888" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+      <rect x="430" y="25" width="100" height="50" rx="6" fill="#fef3e2" stroke="#f4a261" stroke-width="1.5"/>
+      <text x="480" y="54" text-anchor="middle" font-size="10" font-weight="600">Backward</text>
+      <line x1="530" y1="50" x2="560" y2="50" stroke="#888" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+      <rect x="570" y="25" width="110" height="50" rx="6" fill="#fef3e2" stroke="#f4a261" stroke-width="1.5"/>
+      <text x="625" y="48" text-anchor="middle" font-size="10" font-weight="600">AdamW Step</text>
+      <text x="625" y="62" text-anchor="middle" font-size="9" fill="#555">+ Grad Clip</text>
+    </svg>
+  </div>
+
+  <h2>Learning Rate Schedule</h2>
+  <p>Training uses a two-phase schedule: <strong>linear warmup</strong> for the first 10% of steps (avoids instability from random initial weights), then <strong>cosine decay</strong> that smoothly reduces the learning rate to a minimum value.</p>
+
+  <table>
+    <tr><th>Parameter</th><th>Value</th><th>Why</th></tr>
+    <tr><td>Peak LR</td><td>5e-4</td><td>Standard for small-scale GPT training</td></tr>
+    <tr><td>Min LR</td><td>1e-5</td><td>Prevents learning from stopping completely</td></tr>
+    <tr><td>Warmup</td><td>10% of steps</td><td>Stabilizes early training with random weights</td></tr>
+    <tr><td>Grad clip</td><td>max_norm=1.0</td><td>Prevents exploding gradients</td></tr>
+    <tr><td>Weight decay</td><td>0.1</td><td>Regularization (skipped for bias and LayerNorm)</td></tr>
+  </table>
+
+  <h2>Optimizer: AdamW</h2>
+  <p>AdamW applies weight decay <em>directly to weights</em> rather than through the gradient (unlike L2 regularization in vanilla Adam). The implementation selectively excludes bias and LayerNorm parameters from weight decay, since regularizing them hurts performance.</p>
+
+  <h2>Evaluation Metrics</h2>
+  <div class="concepts">
+    <div class="concept">
+      <strong>Cross-Entropy Loss</strong>
+      <span>Measures how well the model predicts the next token</span>
+    </div>
+    <div class="concept">
+      <strong>Perplexity</strong>
+      <span>exp(loss) &mdash; roughly "how many tokens is the model choosing between"</span>
+    </div>
+  </div>
+  <p>A random baseline has perplexity &asymp; vocab_size (50,257). Good LLMs achieve 10&ndash;30 on standard benchmarks. Lower is better.</p>
+
+  <h2>Checkpointing</h2>
+  <p>The training loop periodically saves model weights, optimizer state, and metadata (epoch, step, loss) to <code>.pt</code> files. This allows resuming interrupted training and selecting the best checkpoint.</p>
+
+  <h2>Running Pretraining</h2>
+  <pre><code># Trains a small config (128d, 4 heads, 4 layers) on CPU
+python -m ch05.pretrain
+
+# Uses ~5,000 tokens from "The Verdict" by Edith Wharton
+# 30 epochs, batch size 4, evaluates every 10 steps</code></pre>
+
+  <h2>Key Files</h2>
+  <table>
+    <tr><th>File</th><th>Description</th></tr>
+    <tr><td><code>ch05/pretrain.py</code></td><td>Main entry point &mdash; data loading, model init, training launch</td></tr>
+    <tr><td><code>ch05/train.py</code></td><td>Full training loop with warmup + cosine LR decay</td></tr>
+    <tr><td><code>ch05/evaluate.py</code></td><td>Loss calculation, perplexity, periodic text generation</td></tr>
+    <tr><td><code>ch05/utils.py</code></td><td>LR scheduler, checkpoint save/load utilities</td></tr>
+  </table>
+
+  <footer>
+    <a href="model.html">&larr; Model</a>
+    <a href="finetuning.html">Fine-tuning &rarr;</a>
+  </footer>
+</div>
+</body>
+</html>

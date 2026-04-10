@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tokenization &ndash; LLM From Scratch</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <span class="brand">LLM From Scratch</span>
+  <a href="index.html">Overview</a>
+  <a href="architecture.html">Architecture</a>
+  <a href="tokenization.html" class="active">Tokenization</a>
+  <a href="attention.html">Attention</a>
+  <a href="model.html">Model</a>
+  <a href="training.html">Training</a>
+  <a href="finetuning.html">Fine-tuning</a>
+  <span class="spacer"></span>
+  <a href="https://github.com/iyunbo/llm-from-scratch">GitHub</a>
+</nav>
+
+<div class="container">
+  <h1>Text Data &amp; Tokenization</h1>
+  <p class="subtitle">Chapter 2 &mdash; Converting raw text into the numerical sequences that a neural network can process.</p>
+
+  <h2>Pipeline Overview</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 700 100" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, sans-serif">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+        </marker>
+      </defs>
+      <rect x="10" y="25" width="110" height="50" rx="6" fill="#d4f5e9" stroke="#2ec4b6" stroke-width="1.5"/>
+      <text x="65" y="54" text-anchor="middle" font-size="11" font-weight="600">Raw Text</text>
+      <line x1="120" y1="50" x2="160" y2="50" stroke="#888" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <rect x="170" y="25" width="110" height="50" rx="6" fill="#d4f5e9" stroke="#2ec4b6" stroke-width="1.5"/>
+      <text x="225" y="54" text-anchor="middle" font-size="11" font-weight="600">BPE Tokenizer</text>
+      <line x1="280" y1="50" x2="320" y2="50" stroke="#888" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <rect x="330" y="25" width="130" height="50" rx="6" fill="#d4f5e9" stroke="#2ec4b6" stroke-width="1.5"/>
+      <text x="395" y="48" text-anchor="middle" font-size="11" font-weight="600">Token + Position</text>
+      <text x="395" y="62" text-anchor="middle" font-size="10" fill="#555">Embeddings</text>
+      <line x1="460" y1="50" x2="500" y2="50" stroke="#888" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <rect x="510" y="25" width="120" height="50" rx="6" fill="#d4f5e9" stroke="#2ec4b6" stroke-width="1.5"/>
+      <text x="570" y="54" text-anchor="middle" font-size="11" font-weight="600">DataLoader</text>
+    </svg>
+  </div>
+
+  <h2>Tokenization</h2>
+  <p>The project implements two tokenizers: a simple vocabulary-based one for learning, and OpenAI's BPE tokenizer via <code>tiktoken</code> for production use. BPE (Byte Pair Encoding) iteratively merges the most frequent character pairs, building a vocabulary of 50,257 subword tokens that can represent any text.</p>
+
+  <pre><code>import tiktoken
+enc = tiktoken.get_encoding("gpt2")
+ids = enc.encode("Hello, world!")  # [15496, 11, 995, 0]</code></pre>
+
+  <h2>Embeddings</h2>
+  <p>Each token ID maps to a dense vector via <code>nn.Embedding</code>. A separate positional embedding encodes where each token sits in the sequence. The two are summed to produce the input to the transformer.</p>
+
+  <div class="formula">input = token_embedding(x) + position_embedding(positions)</div>
+
+  <table>
+    <tr><th>Component</th><th>Shape</th><th>Purpose</th></tr>
+    <tr><td>Token embedding</td><td>50,257 &times; 768</td><td>Map token IDs to dense vectors</td></tr>
+    <tr><td>Position embedding</td><td>1,024 &times; 768</td><td>Encode sequence position</td></tr>
+  </table>
+
+  <h2>Sliding Window DataLoader</h2>
+  <p>Training data is created by sliding a window across the tokenized text. Each window produces an (input, target) pair where the target is the input shifted by one position &mdash; the classic next-token prediction setup.</p>
+
+  <pre><code># stride < max_len creates overlapping windows
+# "The cat sat on" -> input: [The, cat, sat], target: [cat, sat, on]
+dataset = GPTDataset(tokens, max_len=4, stride=2)</code></pre>
+
+  <h2>Key Files</h2>
+  <table>
+    <tr><th>File</th><th>Description</th></tr>
+    <tr><td><code>ch02/tokenizer.py</code></td><td>SimpleTokenizer and BPE tokenizer wrapper</td></tr>
+    <tr><td><code>ch02/embeddings.py</code></td><td>Token and positional embedding layers</td></tr>
+    <tr><td><code>ch02/dataloader.py</code></td><td>GPTDataset and DataLoader creation</td></tr>
+  </table>
+
+  <footer>
+    <a href="architecture.html">&larr; Architecture</a>
+    <a href="attention.html">Attention &rarr;</a>
+  </footer>
+</div>
+</body>
+</html>
