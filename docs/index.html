@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM From Scratch</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <span class="brand">LLM From Scratch</span>
+  <a href="index.html" class="active">Overview</a>
+  <a href="architecture.html">Architecture</a>
+  <a href="tokenization.html">Tokenization</a>
+  <a href="attention.html">Attention</a>
+  <a href="model.html">Model</a>
+  <a href="training.html">Training</a>
+  <a href="finetuning.html">Fine-tuning</a>
+  <span class="spacer"></span>
+  <a href="https://github.com/iyunbo/llm-from-scratch">GitHub</a>
+</nav>
+
+<div class="container">
+  <h1>LLM From Scratch</h1>
+  <p class="subtitle">A complete GPT-style language model built from first principles in PyTorch, following Sebastian Raschka's <em>Build a Large Language Model (From Scratch)</em>.</p>
+
+  <div class="stats">
+    <div class="stat"><span class="num">3,609</span><span class="label">Lines of Code</span></div>
+    <div class="stat"><span class="num">7</span><span class="label">Chapters</span></div>
+    <div class="stat"><span class="num">21</span><span class="label">Python Files</span></div>
+    <div class="stat"><span class="num">124M</span><span class="label">Parameters (GPT-2)</span></div>
+  </div>
+
+  <h2>What This Project Covers</h2>
+  <p>Every layer of the GPT architecture is implemented from scratch &mdash; from BPE tokenization through multi-head attention to instruction-tuned chat. Each chapter builds on the last, with runnable demos and detailed explanations.</p>
+
+  <div class="cards">
+    <a class="card" href="tokenization.html">
+      <span class="tag tag-data">Chapter 2</span>
+      <h3>Text Data &amp; Tokenization</h3>
+      <p>BPE tokenizer, token &amp; positional embeddings, sliding-window dataloader.</p>
+    </a>
+    <a class="card" href="attention.html">
+      <span class="tag tag-attention">Chapter 3</span>
+      <h3>Attention Mechanisms</h3>
+      <p>Simple, causal, and multi-head attention &mdash; built incrementally from raw matrix math.</p>
+    </a>
+    <a class="card" href="model.html">
+      <span class="tag tag-model">Chapter 4</span>
+      <h3>GPT Model Architecture</h3>
+      <p>Transformer blocks, GELU, LayerNorm, residual connections, and text generation.</p>
+    </a>
+    <a class="card" href="training.html">
+      <span class="tag tag-train">Chapter 5</span>
+      <h3>Pretraining</h3>
+      <p>Full training loop with warmup, cosine LR decay, gradient clipping, and checkpointing.</p>
+    </a>
+    <a class="card" href="finetuning.html">
+      <span class="tag tag-finetune">Chapters 6 &amp; 7</span>
+      <h3>Fine-tuning</h3>
+      <p>Transfer learning for classification, then instruction tuning for an interactive chatbot.</p>
+    </a>
+    <a class="card" href="architecture.html">
+      <span class="tag tag-arch">Overview</span>
+      <h3>Architecture Diagram</h3>
+      <p>Interactive SVG showing how all components connect, from tokens to generated text.</p>
+    </a>
+  </div>
+
+  <h2>Quick Start</h2>
+  <pre><code># Clone and set up
+git clone https://github.com/iyunbo/llm-from-scratch.git
+cd llm-from-scratch
+python -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install torch tiktoken numpy
+
+# Pretrain on sample text
+python -m ch05.pretrain
+
+# Chat with the instruction-tuned model
+python -m ch07.chat</code></pre>
+
+  <h2>Key Takeaways</h2>
+  <table>
+    <tr><th>Insight</th><th>Why It Matters</th></tr>
+    <tr><td>LLMs are stacked transformer blocks</td><td>The core architecture is embeddings + attention + feedforward, repeated N times</td></tr>
+    <tr><td>Next-token prediction is enough</td><td>This single self-supervised objective forces models to learn deep language understanding</td></tr>
+    <tr><td>Scale is architecture-agnostic</td><td>Same code works from 128-dim toys to GPT-2 XL (1.5B params)</td></tr>
+    <tr><td>Transfer learning is powerful</td><td>Pretrained weights adapt to classification and instruction-following with minimal extra training</td></tr>
+  </table>
+
+  <footer>
+    <span>Built by <a href="https://github.com/iyunbo">Yunbo Wang</a></span>
+    <a href="architecture.html">Architecture &rarr;</a>
+  </footer>
+</div>
+</body>
+</html>

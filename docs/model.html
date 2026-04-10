@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Model &ndash; LLM From Scratch</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav>
+  <span class="brand">LLM From Scratch</span>
+  <a href="index.html">Overview</a>
+  <a href="architecture.html">Architecture</a>
+  <a href="tokenization.html">Tokenization</a>
+  <a href="attention.html">Attention</a>
+  <a href="model.html" class="active">Model</a>
+  <a href="training.html">Training</a>
+  <a href="finetuning.html">Fine-tuning</a>
+  <span class="spacer"></span>
+  <a href="https://github.com/iyunbo/llm-from-scratch">GitHub</a>
+</nav>
+
+<div class="container">
+  <h1>GPT Model Architecture</h1>
+  <p class="subtitle">Chapter 4 &mdash; Assembling transformer blocks, activation functions, and normalization into a complete GPT model.</p>
+
+  <h2>Model Stack</h2>
+  <p>The GPT model is a stack of identical transformer blocks, bookended by embeddings at the input and a linear projection at the output.</p>
+
+  <pre><code>class GPTModel:
+    token_emb + pos_emb      # Input embeddings
+    dropout
+    TransformerBlock &times; N     # Repeated N times
+    LayerNorm                 # Final normalization
+    Linear(d_model, vocab)    # Output head</code></pre>
+
+  <h2>Transformer Block</h2>
+  <p>Each block uses <strong>pre-norm</strong> architecture with residual connections:</p>
+
+  <div class="formula">x = x + Attention(LayerNorm(x))<br>x = x + FeedForward(LayerNorm(x))</div>
+
+  <p>Pre-norm (normalizing <em>before</em> the sublayer) is more numerically stable than post-norm for deep networks, which is why modern LLMs use it.</p>
+
+  <h2>Components</h2>
+
+  <h3>LayerNorm</h3>
+  <p>Normalizes activations across the feature dimension with learnable scale (<code>gamma</code>) and shift (<code>beta</code>) parameters. Keeps gradients well-behaved through deep networks.</p>
+
+  <h3>GELU Activation</h3>
+  <p>Gaussian Error Linear Unit &mdash; a smooth, probabilistic gate that lets some negative values through (unlike ReLU's hard cutoff). Standard in modern transformers.</p>
+
+  <div class="formula">GELU(x) = x &middot; &Phi;(x) &nbsp;&nbsp; where &Phi; is the Gaussian CDF</div>
+
+  <h3>FeedForward Network</h3>
+  <p>A position-wise MLP that expands to 4&times; the model dimension, applies GELU, then projects back:</p>
+
+  <pre><code>Linear(d_model, 4 * d_model)  # Expand
+GELU()                         # Activate
+Linear(4 * d_model, d_model)  # Compress
+Dropout()</code></pre>
+
+  <h2>Text Generation</h2>
+  <p>Two strategies for sampling the next token from the output distribution:</p>
+
+  <table>
+    <tr><th>Method</th><th>How It Works</th><th>Trade-off</th></tr>
+    <tr><td>Greedy</td><td>Always pick the highest-probability token</td><td>Deterministic but repetitive</td></tr>
+    <tr><td>Top-k + Temperature</td><td>Sample from the k most likely tokens, with temperature scaling</td><td>More diverse and natural</td></tr>
+  </table>
+
+  <p>Temperature &lt; 1 sharpens the distribution (more confident picks); temperature &gt; 1 flattens it (more creative/random).</p>
+
+  <h2>Parameter Breakdown (GPT-2 Small)</h2>
+  <table>
+    <tr><th>Component</th><th>Parameters</th><th>% of Total</th></tr>
+    <tr><td>Token embedding</td><td>38.6M</td><td>31%</td></tr>
+    <tr><td>Position embedding</td><td>0.78M</td><td>&lt;1%</td></tr>
+    <tr><td>12 Transformer blocks</td><td>85M</td><td>69%</td></tr>
+    <tr><td>Final LayerNorm</td><td>1.5K</td><td>&lt;0.01%</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>124M</strong></td><td></td></tr>
+  </table>
+
+  <h2>Key Files</h2>
+  <table>
+    <tr><th>File</th><th>Description</th></tr>
+    <tr><td><code>ch04/config.py</code></td><td>GPTConfig dataclass with GPT-2 Small/Medium/Large/XL presets</td></tr>
+    <tr><td><code>ch04/gpt_model.py</code></td><td>Complete GPT model: LayerNorm, GELU, FeedForward, TransformerBlock, GPTModel</td></tr>
+    <tr><td><code>ch04/generate.py</code></td><td>Greedy decoding and top-k sampling with temperature</td></tr>
+  </table>
+
+  <footer>
+    <a href="attention.html">&larr; Attention</a>
+    <a href="training.html">Training &rarr;</a>
+  </footer>
+</div>
+</body>
+</html>
